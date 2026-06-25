@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Follow-Ups{% endblock %}
+{% block page_title %}Follow-Up Tasks{% endblock %}
+{% block page_subtitle %}Manage reminders & scheduled actions{% endblock %}
+
+{% block content %}
+
+{% if overdue %}
+<div class="alert alert-danger">
+  <i class="fas fa-exclamation-triangle"></i>
+  <strong>{{ overdue|length }} overdue task(s)</strong> — Please action these immediately!
+</div>
+{% endif %}
+
+<!-- Overdue -->
+{% if overdue %}
+<div class="card mb-4" style="border-left:4px solid var(--danger)">
+  <div class="card-header" style="background:#FEF2F2">
+    <h3 style="color:var(--danger)">⚠️ Overdue Tasks ({{ overdue|length }})</h3>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Institution</th><th>Task Type</th><th>Description</th><th>Due Date</th><th>Assigned To</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for fu in overdue %}
+        <tr style="background:#FFF5F5">
+          <td>
+            <a href="{{ url_for('lead_detail', id=fu.institution_id) }}" style="color:var(--primary);font-weight:700;text-decoration:none">
+              {{ fu.institution.name if fu.institution else 'Unknown' }}
+            </a>
+            <div style="font-size:11px;color:var(--gray)">{{ fu.institution.location if fu.institution else '' }}</div>
+          </td>
+          <td><span class="chip">{{ fu.task_type }}</span></td>
+          <td style="font-size:13px">{{ fu.description }}</td>
+          <td style="color:var(--danger);font-weight:600;font-size:13px">
+            {{ fu.due_date|fmtdatetime }}<br>
+            <span style="font-size:11px">Overdue</span>
+          </td>
+          <td style="font-size:12px">{{ fu.institution.assigned_to if fu.institution else '—' }}</td>
+          <td><button onclick="completeFollowup({{ fu.id }}, this)" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Mark Done</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Upcoming -->
+<div class="card">
+  <div class="card-header">
+    <h3>📅 Upcoming Tasks ({{ upcoming|length }})</h3>
+  </div>
+  {% if upcoming %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Institution</th><th>Task Type</th><th>Description</th><th>Due Date</th><th>Priority</th><th>Assigned To</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for fu in upcoming %}
+        <tr>
+          <td>
+            <a href="{{ url_for('lead_detail', id=fu.institution_id) }}" style="color:var(--primary);font-weight:700;text-decoration:none">
+              {{ fu.institution.name if fu.institution else 'Unknown' }}
+            </a>
+            <div style="font-size:11px;color:var(--gray)">{{ fu.institution.location if fu.institution else '' }}</div>
+          </td>
+          <td><span class="chip">{{ fu.task_type }}</span></td>
+          <td style="font-size:13px">{{ fu.description }}</td>
+          <td style="font-size:12px;color:var(--gray)">{{ fu.due_date|fmtdatetime }}</td>
+          <td>
+            {% if fu.institution %}
+            <span class="badge badge-{{ fu.institution.priority_label|lower }}">{{ fu.institution.priority_label }}</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px">{{ fu.institution.assigned_to if fu.institution else '—' }}</td>
+          <td><button onclick="completeFollowup({{ fu.id }}, this)" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Done</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-calendar-check"></i>
+    <p style="font-size:16px;margin-bottom:8px">All caught up!</p>
+    <p>No upcoming follow-up tasks.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

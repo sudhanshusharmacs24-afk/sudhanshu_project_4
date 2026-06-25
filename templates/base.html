@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Academia CRM{% endblock %} | B2B Sales Platform</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --primary: #4F46E5;
+  --primary-dark: #3730A3;
+  --primary-light: #EEF2FF;
+  --secondary: #06B6D4;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --dark: #1E293B;
+  --gray: #64748B;
+  --light: #F8FAFC;
+  --border: #E2E8F0;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --hover-shadow: 0 10px 25px rgba(79,70,229,0.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background:#F1F5F9; color:var(--dark); }
+
+/* Sidebar */
+.sidebar {
+  width: 260px; background: var(--dark); height: 100vh;
+  position: fixed; left:0; top:0; overflow-y:auto;
+  display:flex; flex-direction:column; z-index:100;
+}
+.sidebar-logo {
+  padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-logo h2 { color:#fff; font-size:18px; font-weight:700; }
+.sidebar-logo p { color:rgba(255,255,255,0.5); font-size:12px; margin-top:2px; }
+.sidebar-nav { padding:16px 12px; flex:1; }
+.nav-section { margin-bottom:24px; }
+.nav-section-title { color:rgba(255,255,255,0.4); font-size:10px; font-weight:600;
+  letter-spacing:1px; text-transform:uppercase; padding:0 8px; margin-bottom:8px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px;
+  border-radius:8px; color:rgba(255,255,255,0.7); text-decoration:none;
+  font-size:14px; transition:all 0.2s; margin-bottom:2px; }
+.nav-item:hover { background:rgba(255,255,255,0.1); color:#fff; }
+.nav-item.active { background:var(--primary); color:#fff; }
+.nav-item i { width:18px; text-align:center; font-size:15px; }
+.sidebar-footer { padding:16px; border-top:1px solid rgba(255,255,255,0.1); }
+.sidebar-footer p { color:rgba(255,255,255,0.4); font-size:11px; text-align:center; }
+
+/* Main */
+.main { margin-left:260px; min-height:100vh; }
+.topbar {
+  background:#fff; border-bottom:1px solid var(--border);
+  padding:16px 28px; display:flex; align-items:center;
+  justify-content:space-between; position:sticky; top:0; z-index:50;
+}
+.topbar-title h1 { font-size:20px; font-weight:700; color:var(--dark); }
+.topbar-title p { font-size:13px; color:var(--gray); margin-top:2px; }
+.topbar-actions { display:flex; gap:10px; align-items:center; }
+.content { padding:28px; }
+
+/* Cards */
+.card { background:#fff; border-radius:12px; box-shadow:var(--card-shadow); }
+.card-header { padding:18px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; }
+.card-header h3 { font-size:15px; font-weight:600; }
+.card-body { padding:20px; }
+
+/* Stats Grid */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+.stat-card {
+  background:#fff; border-radius:12px; padding:20px;
+  box-shadow:var(--card-shadow); display:flex; align-items:center; gap:16px;
+  border-left: 4px solid transparent; transition:transform 0.2s;
+}
+.stat-card:hover { transform:translateY(-2px); }
+.stat-icon {
+  width:52px; height:52px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+}
+.stat-info p { font-size:12px; color:var(--gray); font-weight:500; margin-bottom:4px; }
+.stat-info h3 { font-size:28px; font-weight:700; }
+.stat-info span { font-size:11px; color:var(--success); }
+
+/* Buttons */
+.btn {
+  padding:9px 18px; border-radius:8px; font-size:13px; font-weight:500;
+  cursor:pointer; border:none; display:inline-flex; align-items:center;
+  gap:7px; text-decoration:none; transition:all 0.2s;
+}
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-secondary { background:#fff; color:var(--dark); border:1px solid var(--border); }
+.btn-secondary:hover { background:var(--light); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-warning { background:var(--warning); color:#fff; }
+
+/* Badges */
+.badge {
+  padding:3px 10px; border-radius:20px; font-size:11px;
+  font-weight:600; display:inline-block;
+}
+.badge-new { background:#DBEAFE; color:#1D4ED8; }
+.badge-contacted { background:#FEF3C7; color:#92400E; }
+.badge-meeting { background:#D1FAE5; color:#065F46; }
+.badge-proposal { background:#EDE9FE; color:#5B21B6; }
+.badge-negotiation { background:#FEE2E2; color:#991B1B; }
+.badge-closed { background:#D1FAE5; color:#065F46; }
+.badge-high { background:#FEE2E2; color:#DC2626; }
+.badge-medium { background:#FEF3C7; color:#B45309; }
+.badge-low { background:#D1FAE5; color:#059669; }
+
+/* Table */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { background:var(--light); color:var(--gray); font-size:11px; font-weight:600;
+     text-transform:uppercase; letter-spacing:0.5px; padding:12px 16px; text-align:left; }
+td { padding:14px 16px; border-bottom:1px solid var(--border); font-size:13px; }
+tr:hover td { background:#F8FAFC; }
+tr:last-child td { border-bottom:none; }
+
+/* Forms */
+.form-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group.full { grid-column:1/-1; }
+label { font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; }
+input, select, textarea {
+  padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+  font-size:14px; color:var(--dark); outline:none; transition:border-color 0.2s;
+  font-family:inherit; background:#fff;
+}
+input:focus, select:focus, textarea:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(79,70,229,0.1); }
+textarea { resize:vertical; min-height:100px; }
+
+/* Alerts */
+.alert { padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:13px; display:flex; gap:8px; }
+.alert-success { background:#D1FAE5; color:#065F46; }
+.alert-danger { background:#FEE2E2; color:#991B1B; }
+.alert-info { background:#DBEAFE; color:#1D4ED8; }
+
+/* AI Card */
+.ai-card {
+  background:linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  border-radius:12px; padding:20px; color:#fff; margin-bottom:16px;
+}
+.ai-card h4 { font-size:14px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.ai-suggestion {
+  background:rgba(255,255,255,0.15); border-radius:8px; padding:10px 14px;
+  margin-bottom:8px; font-size:13px; display:flex; align-items:center; gap:10px;
+}
+.urgency-high { border-left:3px solid #F87171; }
+.urgency-medium { border-left:3px solid #FCD34D; }
+
+/* Priority bar */
+.priority-bar-wrap { background:rgba(255,255,255,0.2); border-radius:20px; height:8px; margin-top:8px; }
+.priority-bar { height:8px; border-radius:20px; background:#fff; }
+
+/* Pipeline */
+.pipeline { display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; }
+.pipeline-col {
+  min-width:160px; background:#F8FAFC; border-radius:10px;
+  padding:14px; flex:1;
+}
+.pipeline-col-header {
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+  margin-bottom:10px; color:var(--gray);
+}
+.pipeline-count {
+  font-size:28px; font-weight:700; color:var(--dark);
+}
+.pipeline-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+
+/* Activity Feed */
+.activity-item { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.activity-item:last-child { border-bottom:none; }
+.activity-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); margin-top:6px; flex-shrink:0; }
+.activity-text { font-size:13px; color:var(--dark); }
+.activity-time { font-size:11px; color:var(--gray); margin-top:3px; }
+
+/* Score ring */
+.score-ring {
+  width:80px; height:80px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:22px; font-weight:800; color:#fff;
+  flex-shrink:0;
+}
+
+/* Responsive */
+@media(max-width:768px) {
+  .sidebar { transform:translateX(-260px); }
+  .main { margin-left:0; }
+  .form-grid { grid-template-columns:1fr; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+/* Misc */
+.empty-state { text-align:center; padding:60px 20px; color:var(--gray); }
+.empty-state i { font-size:48px; margin-bottom:12px; color:var(--border); }
+.chip { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px;
+        background:var(--primary-light); color:var(--primary); margin:2px; font-weight:500; }
+.flex { display:flex; } .items-center { align-items:center; }
+.gap-2 { gap:8px; } .gap-3 { gap:12px; }
+.justify-between { justify-content:space-between; }
+.text-gray { color:var(--gray); } .text-sm { font-size:13px; }
+.mb-4 { margin-bottom:16px; } .mb-6 { margin-bottom:24px; }
+.mt-2 { margin-top:8px; } .mt-4 { margin-top:16px; }
+.w-full { width:100%; }
+.grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.outreach-box { background:#F8FAFC; border:1px solid var(--border); border-radius:8px;
+  padding:16px; font-size:13px; line-height:1.7; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h2><i class="fas fa-graduation-cap"></i> AcademiaCRM</h2>
+    <p>B2B Sales Intelligence Platform</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Overview</div>
+      <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}">
+        <i class="fas fa-chart-pie"></i> Dashboard
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Sales</div>
+      <a href="{{ url_for('leads') }}" class="nav-item {% if request.endpoint in ['leads','lead_detail','edit_lead'] %}active{% endif %}">
+        <i class="fas fa-university"></i> Institutions
+      </a>
+      <a href="{{ url_for('add_lead') }}" class="nav-item {% if request.endpoint=='add_lead' %}active{% endif %}">
+        <i class="fas fa-plus-circle"></i> Add Lead
+      </a>
+      <a href="{{ url_for('followups') }}" class="nav-item {% if request.endpoint=='followups' %}active{% endif %}">
+        <i class="fas fa-bell"></i> Follow-Ups
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Pipeline</div>
+      <a href="{{ url_for('leads') }}?status=New+Lead" class="nav-item">
+        <i class="fas fa-star"></i> New Leads
+      </a>
+      <a href="{{ url_for('leads') }}?status=Meeting+Scheduled" class="nav-item">
+        <i class="fas fa-calendar"></i> Meetings
+      </a>
+      <a href="{{ url_for('leads') }}?status=Negotiation" class="nav-item">
+        <i class="fas fa-handshake"></i> Negotiation
+      </a>
+      <a href="{{ url_for('leads') }}?status=Closed" class="nav-item">
+        <i class="fas fa-check-circle"></i> Closed Deals
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <p>AI-Powered CRM v1.0</p>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+      <p>{% block page_subtitle %}B2B Academia Sales Intelligence{% endblock %}</p>
+    </div>
+    <div class="topbar-actions">
+      {% block topbar_actions %}
+      <a href="{{ url_for('add_lead') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Lead
+      </a>
+      {% endblock %}
+    </div>
+  </div>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ 'success' if cat=='success' else 'info' }}">
+            <i class="fas fa-{{ 'check-circle' if cat=='success' else 'info-circle' }}"></i> {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script>
+function getStatusBadge(status) {
+  const map = {
+    'New Lead':'new','Contacted':'contacted','Meeting Scheduled':'meeting',
+    'Proposal Sent':'proposal','Negotiation':'negotiation','Closed':'closed'
+  };
+  return map[status] || 'new';
+}
+
+async function updateStatus(id, status) {
+  const res = await fetch('/api/leads/status_update', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id, status})
+  });
+  const data = await res.json();
+  if(data.success) location.reload();
+}
+
+async function completeFollowup(fuId, btn) {
+  const res = await fetch(`/followup/${fuId}/complete`, {method:'POST'});
+  const data = await res.json();
+  if(data.success) {
+    btn.closest('tr').style.opacity='0.4';
+    btn.textContent = 'Done ✓';
+    btn.disabled = true;
+  }
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

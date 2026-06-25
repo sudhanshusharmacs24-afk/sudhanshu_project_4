@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Sales overview & key metrics{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="stats-grid mb-6">
+  <div class="stat-card" style="border-color:#4F46E5">
+    <div class="stat-icon" style="background:#EEF2FF;color:#4F46E5"><i class="fas fa-university"></i></div>
+    <div class="stat-info">
+      <p>Total Institutions</p>
+      <h3>{{ total }}</h3>
+      <span>All time leads</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-color:#06B6D4">
+    <div class="stat-icon" style="background:#ECFEFF;color:#06B6D4"><i class="fas fa-fire"></i></div>
+    <div class="stat-info">
+      <p>Active Leads</p>
+      <h3>{{ active }}</h3>
+      <span>In pipeline</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-color:#F59E0B">
+    <div class="stat-icon" style="background:#FFFBEB;color:#F59E0B"><i class="fas fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <p>Meetings Scheduled</p>
+      <h3>{{ meetings }}</h3>
+      <span>Upcoming demos</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-color:#10B981">
+    <div class="stat-icon" style="background:#ECFDF5;color:#10B981"><i class="fas fa-trophy"></i></div>
+    <div class="stat-info">
+      <p>Closed Deals</p>
+      <h3>{{ closed }}</h3>
+      <span>Partnerships</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-color:#EF4444">
+    <div class="stat-icon" style="background:#FEF2F2;color:#EF4444"><i class="fas fa-bolt"></i></div>
+    <div class="stat-info">
+      <p>High Priority</p>
+      <h3>{{ high_priority }}</h3>
+      <span>Need attention</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-color:#8B5CF6">
+    <div class="stat-icon" style="background:#F5F3FF;color:#8B5CF6"><i class="fas fa-bell"></i></div>
+    <div class="stat-info">
+      <p>Follow-ups Due</p>
+      <h3>{{ pending_followups }}</h3>
+      <span>In 3 days</span>
+    </div>
+  </div>
+</div>
+
+<!-- Pipeline -->
+<div class="card mb-6">
+  <div class="card-header">
+    <h3><i class="fas fa-stream" style="color:var(--primary)"></i>&nbsp; Sales Pipeline</h3>
+    <a href="{{ url_for('leads') }}" class="btn btn-secondary btn-sm">View All</a>
+  </div>
+  <div class="card-body">
+    <div class="pipeline">
+      {% set colors = ['#4F46E5','#06B6D4','#F59E0B','#8B5CF6','#EF4444','#10B981'] %}
+      {% set statuses = ['New Lead','Contacted','Meeting Scheduled','Proposal Sent','Negotiation','Closed'] %}
+      {% for s in statuses %}
+      <div class="pipeline-col">
+        <div class="pipeline-col-header">
+          <span class="pipeline-dot" style="background:{{ colors[loop.index0] }}"></span>{{ s }}
+        </div>
+        <div class="pipeline-count" style="color:{{ colors[loop.index0] }}">{{ pipeline[s] }}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:4px;">institutions</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid-2 mb-6">
+  <div class="card">
+    <div class="card-header"><h3>Pipeline Distribution</h3></div>
+    <div class="card-body">
+      <canvas id="pipelineChart" height="220"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Lead Sources</h3></div>
+    <div class="card-body">
+      <canvas id="sourceChart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Leads + Activity -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h3>Recent Leads</h3>
+      <a href="{{ url_for('leads') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      {% if recent %}
+      <table>
+        <thead><tr><th>Institution</th><th>Status</th><th>Priority</th></tr></thead>
+        <tbody>
+          {% for inst in recent %}
+          <tr>
+            <td>
+              <a href="{{ url_for('lead_detail', id=inst.id) }}" style="color:var(--primary);font-weight:600;text-decoration:none">
+                {{ inst.name }}
+              </a>
+              <div style="font-size:11px;color:var(--gray)">{{ inst.location }}</div>
+            </td>
+            <td><span class="badge badge-{{ inst.lead_status|lower|replace(' ','-') }}">{{ inst.lead_status }}</span></td>
+            <td>
+              <span class="badge badge-{{ inst.priority_label|lower }}">{{ inst.priority_label }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-inbox"></i><p>No leads yet</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Recent Activity</h3></div>
+    <div class="card-body">
+      {% if recent_activities %}
+        {% for act in recent_activities %}
+        <div class="activity-item">
+          <div class="activity-dot" style="background:{% if 'Status' in act.action %}var(--warning){% elif 'created' in act.action %}var(--success){% else %}var(--primary){% endif %}"></div>
+          <div>
+            <div class="activity-text">
+              <a href="{{ url_for('lead_detail', id=act.institution_id) }}" style="color:var(--primary);text-decoration:none;font-weight:600">
+                {{ act.institution.name if act.institution else 'Unknown' }}
+              </a>
+              — {{ act.action }}
+            </div>
+            <div class="activity-time">{{ act.timestamp|fmtdatetime }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="fas fa-history"></i><p>No activity yet</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const pipelineData = {{ pipeline | tojson }};
+const sourceData = {{ source_data | tojson }};
+
+new Chart(document.getElementById('pipelineChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(pipelineData),
+    datasets: [{
+      data: Object.values(pipelineData),
+      backgroundColor: ['#4F46E5','#06B6D4','#F59E0B','#8B5CF6','#EF4444','#10B981'],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+});
+
+new Chart(document.getElementById('sourceChart'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(sourceData),
+    datasets: [{
+      label: 'Leads',
+      data: Object.values(sourceData),
+      backgroundColor: '#4F46E5', borderRadius: 6
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  }
+});
+</script>
+{% endblock %}

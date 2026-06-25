@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}{{ inst.name }}{% endblock %}
+{% block page_title %}{{ inst.name }}{% endblock %}
+{% block page_subtitle %}Lead Details & AI Intelligence{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('edit_lead', id=inst.id) }}" class="btn btn-secondary"><i class="fas fa-edit"></i> Edit</a>
+<form method="POST" action="{{ url_for('delete_lead', id=inst.id) }}" onsubmit="return confirm('Delete this lead?')" style="display:inline">
+  <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
+</form>
+{% endblock %}
+
+{% block content %}
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+  <!-- Left Column -->
+  <div>
+    <!-- Institution Info -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3><i class="fas fa-university" style="color:var(--primary)"></i>&nbsp; Institution Details</h3>
+        <span class="badge badge-{{ inst.lead_status|lower|replace(' ','-') }}" style="font-size:13px;padding:5px 14px">{{ inst.lead_status }}</span>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+          <div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:4px">Type</div>
+            <div style="font-weight:600">{{ inst.institution_type or '—' }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:4px">Location</div>
+            <div style="font-weight:600">{{ inst.location or '—' }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:4px">Students</div>
+            <div style="font-weight:600">{{ "{:,}".format(inst.student_strength) if inst.student_strength else '—' }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:4px">Lead Source</div>
+            <div style="font-weight:600">{{ inst.lead_source or '—' }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:4px">Assigned To</div>
+            <div style="font-weight:600">{{ inst.assigned_to or '—' }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:4px">Created</div>
+            <div style="font-weight:600">{{ inst.created_at|fmtdate }}</div>
+          </div>
+        </div>
+        {% if inst.program_interest %}
+        <div style="margin-top:16px">
+          <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:8px">Programs of Interest</div>
+          {% for p in inst.program_interest.split(',') %}
+          <span class="chip">{{ p.strip() }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if inst.website %}
+        <div style="margin-top:12px;font-size:13px">
+          <i class="fas fa-globe" style="color:var(--primary)"></i>
+          <a href="{{ inst.website }}" target="_blank" style="color:var(--primary)">{{ inst.website }}</a>
+        </div>
+        {% endif %}
+        {% if inst.notes %}
+        <div style="margin-top:16px">
+          <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;margin-bottom:6px">Notes</div>
+          <div style="background:var(--light);padding:12px;border-radius:8px;font-size:13px;line-height:1.6">{{ inst.notes }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="card mb-4">
+      <div class="card-header"><h3><i class="fas fa-user" style="color:var(--secondary)"></i>&nbsp; Contact Person</h3></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--primary)">
+            {{ (inst.contact_person or 'U')[0] }}
+          </div>
+          <div>
+            <div style="font-size:17px;font-weight:700">{{ inst.contact_person or 'Not provided' }}</div>
+            <div style="font-size:13px;color:var(--gray)">{{ inst.designation or '' }}</div>
+            <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap">
+              {% if inst.email %}
+              <a href="mailto:{{ inst.email }}" class="btn btn-secondary btn-sm"><i class="fas fa-envelope"></i> {{ inst.email }}</a>
+              {% endif %}
+              {% if inst.phone %}
+              <a href="tel:{{ inst.phone }}" class="btn btn-secondary btn-sm"><i class="fas fa-phone"></i> {{ inst.phone }}</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Outreach Message -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3>🤖 AI-Generated Outreach Message</h3>
+        <button onclick="refreshOutreach()" class="btn btn-secondary btn-sm"><i class="fas fa-sync"></i> Regenerate</button>
+      </div>
+      <div class="card-body">
+        <div class="outreach-box" id="outreach-text">{{ outreach }}</div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button onclick="copyOutreach()" class="btn btn-primary btn-sm"><i class="fas fa-copy"></i> Copy Message</button>
+          {% if inst.email %}
+          <a href="mailto:{{ inst.email }}?subject=Training Partnership - {{ inst.name }}&body={{ outreach|urlencode }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-paper-plane"></i> Open in Email
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Follow-up Tasks -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3><i class="fas fa-tasks" style="color:var(--warning)"></i>&nbsp; Follow-Up Tasks</h3>
+        <button onclick="toggleAddFollowup()" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Task</button>
+      </div>
+      <div class="card-body" id="add-followup-form" style="display:none;background:var(--light);border-radius:8px;padding:16px;margin-bottom:16px">
+        <form method="POST" action="{{ url_for('add_followup', id=inst.id) }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-group">
+              <label>Task Type</label>
+              <select name="task_type">
+                <option>Call</option><option>Email</option>
+                <option>Meeting</option><option>Demo</option><option>WhatsApp</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Due Date & Time</label>
+              <input type="datetime-local" name="due_date" required>
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-success">Create Task</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="description" placeholder="What needs to be done?">
+          </div>
+        </form>
+      </div>
+      {% if follow_ups %}
+      <table>
+        <thead><tr><th>Type</th><th>Description</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for fu in follow_ups %}
+          <tr id="fu-{{ fu.id }}">
+            <td><span class="chip">{{ fu.task_type }}</span></td>
+            <td style="font-size:13px">{{ fu.description }}</td>
+            <td style="font-size:12px;color:{% if fu.due_date < now and fu.status=='Pending' %}var(--danger){% else %}var(--gray){% endif %}">
+              {{ fu.due_date|fmtdatetime }}
+              {% if fu.due_date < now and fu.status=='Pending' %} <span style="color:var(--danger);font-weight:700">Overdue</span>{% endif %}
+            </td>
+            <td>
+              <span class="badge" style="background:{% if fu.status=='Completed' %}#D1FAE5{% else %}#FEF3C7{% endif %};color:{% if fu.status=='Completed' %}#065F46{% else %}#92400E{% endif %}">
+                {{ fu.status }}
+              </span>
+            </td>
+            <td>
+              {% if fu.status == 'Pending' %}
+              <button onclick="completeFollowup({{ fu.id }}, this)" class="btn btn-success btn-sm">
+                <i class="fas fa-check"></i> Done
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state" style="padding:30px"><i class="fas fa-calendar-check"></i><p>No follow-up tasks</p></div>
+      {% endif %}
+    </div>
+
+    <!-- Activity Log -->
+    <div class="card">
+      <div class="card-header"><h3><i class="fas fa-history" style="color:var(--gray)"></i>&nbsp; Activity Log</h3></div>
+      <div class="card-body">
+        {% for act in activities %}
+        <div class="activity-item">
+          <div class="activity-dot" style="background:{% if 'Status' in act.action %}var(--warning){% elif 'created' in act.action %}var(--success){% elif 'completed' in act.action.lower() %}var(--success){% else %}var(--primary){% endif %}"></div>
+          <div>
+            <div class="activity-text">{{ act.action }}</div>
+            <div class="activity-time">{{ act.timestamp|fmtdatetime }} — by {{ act.actor }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: AI Intelligence -->
+  <div>
+    <!-- AI Score -->
+    <div class="ai-card mb-4">
+      <h4>🤖 AI Lead Intelligence</h4>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+        <div class="score-ring" style="background:{% if inst.priority_label=='High' %}#EF4444{% elif inst.priority_label=='Medium' %}#F59E0B{% else %}#10B981{% endif %}">
+          {{ inst.priority_score }}
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:800">{{ inst.priority_label }} Priority</div>
+          <div style="font-size:12px;opacity:0.8">AI Confidence Score: {{ inst.priority_score }}/100</div>
+        </div>
+      </div>
+      <div style="font-size:11px;opacity:0.7;margin-bottom:4px">Priority Score</div>
+      <div class="priority-bar-wrap">
+        <div class="priority-bar" style="width:{{ inst.priority_score }}%"></div>
+      </div>
+      <button onclick="refreshAI({{ inst.id }})" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;margin-top:12px;border:none">
+        <i class="fas fa-brain"></i> Re-analyze with AI
+      </button>
+    </div>
+
+    <!-- Next Best Action -->
+    <div class="card mb-4">
+      <div class="card-header"><h3>⚡ Next Best Action</h3></div>
+      <div class="card-body">
+        <div style="background:var(--primary-light);border-left:4px solid var(--primary);padding:14px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.6" id="next-action">
+          {{ inst.next_action or 'Click Re-analyze to get AI recommendation' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Update -->
+    <div class="card mb-4">
+      <div class="card-header"><h3>🔄 Update Status</h3></div>
+      <div class="card-body">
+        {% set status_icons = {'New Lead':'⭐','Contacted':'📧','Meeting Scheduled':'📅','Proposal Sent':'📋','Negotiation':'🤝','Closed':'🏆'} %}
+        {% for s in statuses %}
+        <button onclick="updateStatus({{ inst.id }}, '{{ s }}')"
+          style="width:100%;text-align:left;padding:10px 14px;border-radius:8px;border:2px solid {% if s==inst.lead_status %}var(--primary){% else %}var(--border){% endif %};background:{% if s==inst.lead_status %}var(--primary-light){% else %}#fff{% endif %};cursor:pointer;font-size:13px;font-weight:{% if s==inst.lead_status %}700{% else %}500{% endif %};color:{% if s==inst.lead_status %}var(--primary){% else %}var(--dark){% endif %};margin-bottom:6px;display:flex;align-items:center;gap:8px">
+          {{ status_icons[s] }} {{ s }}
+          {% if s==inst.lead_status %}<span style="margin-left:auto;font-size:11px">Current</span>{% endif %}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- AI Follow-up Suggestions -->
+    <div class="card">
+      <div class="card-header"><h3>💡 AI Suggestions</h3></div>
+      <div class="card-body" id="suggestions-panel">
+        {% for s in suggestions %}
+        <div class="ai-suggestion urgency-{{ s.urgency|lower }}" style="background:{% if s.urgency=='High' %}#FEF2F2{% else %}#FFFBEB{% endif %};border-radius:8px;margin-bottom:8px">
+          <span style="font-size:18px">{{ s.icon }}</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:{% if s.urgency=='High' %}var(--danger){% else %}var(--warning){% endif %}">{{ s.urgency }} Priority</div>
+            <div style="font-size:12px;margin-top:2px">{{ s.text }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        {% if not suggestions %}
+        <div style="text-align:center;color:var(--gray);font-size:13px;padding:20px">
+          <i class="fas fa-robot" style="font-size:32px;display:block;margin-bottom:8px"></i>
+          No suggestions at this time
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const now = new Date('{{ now }}');
+
+function toggleAddFollowup() {
+  const f = document.getElementById('add-followup-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function refreshAI(id) {
+  const res = await fetch(`/api/ai/analyze/${id}`);
+  const data = await res.json();
+  document.getElementById('next-action').textContent = data.next_action;
+  const panel = document.getElementById('suggestions-panel');
+  panel.innerHTML = '';
+  data.suggestions.forEach(s => {
+    const bg = s.urgency === 'High' ? '#FEF2F2' : '#FFFBEB';
+    const color = s.urgency === 'High' ? 'var(--danger)' : 'var(--warning)';
+    panel.innerHTML += `<div class="ai-suggestion" style="background:${bg};border-radius:8px;margin-bottom:8px;border-left:3px solid ${color}">
+      <span style="font-size:18px">${s.icon}</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:${color}">${s.urgency} Priority</div>
+        <div style="font-size:12px;margin-top:2px">${s.text}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('outreach-text').textContent = data.outreach;
+  alert('✅ AI analysis refreshed!');
+}
+
+function copyOutreach() {
+  const text = document.getElementById('outreach-text').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('Message copied to clipboard!'));
+}
+
+function refreshOutreach() {
+  location.reload();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}Institutions{% endblock %}
+{% block page_title %}Institution Leads{% endblock %}
+{% block page_subtitle %}Manage all college & university leads{% endblock %}
+
+{% block content %}
+
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body" style="padding:16px">
+    <form method="GET" class="flex gap-3 items-center" style="flex-wrap:wrap">
+      <input name="search" value="{{ search }}" placeholder="🔍 Search institution, contact, location..." style="flex:1;min-width:220px">
+      <select name="status" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {% if s==current_status %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <select name="priority" onchange="this.form.submit()">
+        <option value="">All Priorities</option>
+        <option value="High" {% if current_priority=='High' %}selected{% endif %}>🔴 High</option>
+        <option value="Medium" {% if current_priority=='Medium' %}selected{% endif %}>🟡 Medium</option>
+        <option value="Low" {% if current_priority=='Low' %}selected{% endif %}>🟢 Low</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      {% if search or current_status or current_priority %}
+      <a href="{{ url_for('leads') }}" class="btn btn-secondary">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header">
+    <h3>{{ institutions|length }} Institutions</h3>
+    <a href="{{ url_for('add_lead') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Lead</a>
+  </div>
+  {% if institutions %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Institution</th>
+          <th>Contact</th>
+          <th>Programs</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Assigned</th>
+          <th>AI Score</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inst in institutions %}
+        <tr>
+          <td>
+            <a href="{{ url_for('lead_detail', id=inst.id) }}" style="color:var(--primary);font-weight:700;text-decoration:none">
+              {{ inst.name }}
+            </a>
+            <div style="font-size:11px;color:var(--gray)">
+              <i class="fas fa-map-marker-alt"></i> {{ inst.location or '—' }}
+              {% if inst.student_strength %} &bull; {{ "{:,}".format(inst.student_strength) }} students{% endif %}
+            </div>
+            <div style="font-size:11px;color:var(--gray)">{{ inst.institution_type or '' }}</div>
+          </td>
+          <td>
+            <div style="font-weight:600;font-size:13px">{{ inst.contact_person or '—' }}</div>
+            <div style="font-size:11px;color:var(--gray)">{{ inst.designation or '' }}</div>
+            {% if inst.email %}<div style="font-size:11px"><a href="mailto:{{ inst.email }}" style="color:var(--primary)">{{ inst.email }}</a></div>{% endif %}
+          </td>
+          <td style="max-width:160px">
+            {% if inst.program_interest %}
+              {% for p in inst.program_interest.split(',')[:2] %}
+              <span class="chip">{{ p.strip() }}</span>
+              {% endfor %}
+              {% if inst.program_interest.split(',')|length > 2 %}
+              <span class="chip">+{{ inst.program_interest.split(',')|length - 2 }}</span>
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <select class="badge" onchange="updateStatus({{ inst.id }}, this.value)"
+              style="border:none;cursor:pointer;font-size:11px;padding:4px 8px">
+              {% for s in statuses %}
+              <option value="{{ s }}" {% if s==inst.lead_status %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><span class="badge badge-{{ inst.priority_label|lower }}">{{ inst.priority_label }}</span></td>
+          <td style="font-size:12px">{{ inst.assigned_to or '—' }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:36px;height:36px;border-radius:50%;background:{% if inst.priority_label=='High' %}#FEE2E2{% elif inst.priority_label=='Medium' %}#FEF3C7{% else %}#D1FAE5{% endif %};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:{% if inst.priority_label=='High' %}#DC2626{% elif inst.priority_label=='Medium' %}#B45309{% else %}#059669{% endif %}">
+                {{ inst.priority_score }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <a href="{{ url_for('lead_detail', id=inst.id) }}" class="btn btn-secondary btn-sm" title="View"><i class="fas fa-eye"></i></a>
+              <a href="{{ url_for('edit_lead', id=inst.id) }}" class="btn btn-secondary btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-university"></i>
+    <p style="font-size:16px;margin-bottom:8px">No institutions found</p>
+    <p>Try adjusting your filters or <a href="{{ url_for('add_lead') }}">add a new lead</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
