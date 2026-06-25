@@ -21,38 +21,62 @@ A full-featured CRM system built with Python + Flask for managing college/univer
 
 ---
 
-## 📦 Installation
+## 📦 How to Run This Project
 
 ### Prerequisites
-- Python 3.8+
-- pip
+- **Python 3.8+** (Download: https://www.python.org)
+- **pip** (comes with Python)
+- **Git** (to clone the repository)
 
-### Setup
+### ⚡ Quick Start (3 Steps)
 
+#### **Step 1: Clone & Navigate**
 ```bash
-# 1. Navigate to project folder
-cd crm
+git clone https://github.com/sudhanshusharmacs24-afk/sudhanshu_project.git
+cd sudhanshu_project
+```
 
-# 2. Create virtual environment (recommended)
+#### **Step 2: Setup Python Environment**
+
+**Windows:**
+```bash
 python -m venv venv
-
-# Windows:
 venv\Scripts\activate
-
-# macOS/Linux:
-source venv/bin/activate
-
-# 3. Install dependencies
 pip install -r requirements.txt
+```
 
-# 4. Run the application
+**macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### **Step 3: Run the Application**
+```bash
 python app.py
 ```
 
-### Access
-Open your browser at: **http://localhost:5000**
+### 🌐 Access the CRM
+Once running, open your browser and go to:
+```
+http://127.0.0.1:5000
+```
 
-The app auto-creates the database and seeds 6 sample institution leads on first run.
+✅ **Database auto-initializes** with 6 sample institution leads on first run  
+✅ **No API keys needed** — AI engine is fully built-in  
+✅ **Hot reload enabled** — Changes reflect instantly during development
+
+---
+
+### 📝 Sample Data
+The app comes pre-loaded with 6 institutions:
+- IIT Delhi (High Priority)
+- Oxford University (High Priority)
+- Stanford University (High Priority)
+- Local College (Medium Priority)
+- Tech Institute (Medium Priority)
+- Community College (Low Priority)
 
 ---
 
