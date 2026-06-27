@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">FastAPI CRUD</p>
+            <h1>Task Manager</h1>
+          </div>
+          <a class="docs-link" href="/docs" target="_blank" rel="noreferrer">
+            <i data-lucide="braces"></i>
+            API Docs
+          </a>
+        </header>
+
+        <section class="task-grid" aria-label="Task manager">
+          <form class="task-form" id="task-form">
+            <div class="form-header">
+              <i data-lucide="square-pen"></i>
+              <h2 id="form-title">New Task</h2>
+            </div>
+
+            <input type="hidden" id="task-id">
+
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" maxlength="100" required>
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" maxlength="500" rows="6"></textarea>
+
+            <div class="form-actions">
+              <button class="primary-button" type="submit">
+                <i data-lucide="save"></i>
+                Save
+              </button>
+              <button class="ghost-button" id="cancel-edit" type="button" hidden>
+                <i data-lucide="x"></i>
+                Cancel
+              </button>
+            </div>
+          </form>
+
+          <section class="tasks-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Live Data</p>
+                <h2>Tasks</h2>
+              </div>
+              <button class="icon-button" id="refresh" type="button" aria-label="Refresh tasks">
+                <i data-lucide="refresh-cw"></i>
+              </button>
+            </div>
+
+            <div class="stats-row">
+              <span><strong id="total-count">0</strong> total</span>
+              <span><strong id="open-count">0</strong> open</span>
+              <span><strong id="done-count">0</strong> done</span>
+            </div>
+
+            <div class="task-list" id="task-list"></div>
+            <p class="empty-state" id="empty-state">No tasks yet.</p>
+          </section>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
